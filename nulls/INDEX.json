@@ -1,0 +1,20 @@
+{
+  "kind": "distill-lint-null-index",
+  "version": 1,
+  "note": "Registry of shipped reference K-placebo nulls. `scan`/`probe-list` auto-load a matching null when --null is omitted (match = same base HF-id AND same prompt-set sha8; z is prompt-dependent, so a prompt-mismatched null is NOT auto-used). Each entry records the base + pinned SHA + the placebo recipe so the null is AUDITABLE, not a black-box number. A null is valid ONLY for its exact base SHA + prompt set; a re-uploaded base or a different prompt set invalidates it (the loader hard-refuses on mismatch -- override with --force-null only if you know it is still valid). To add a base, run make_reference_null.py (in the OSF reproducibility artifact) and append an entry here.",
+  "default_prompts_sha8": "55f0e192",
+  "nulls": [
+    {
+      "base": "EleutherAI/pythia-410m",
+      "base_sha": "9879c9b5f8bea9051dcb0e68dff21493d67e9d4f",
+      "file": "pythia-410m.json",
+      "K": 24,
+      "z_floor": 2.0,
+      "nbins": 20,
+      "prompts_sha8": "55f0e192",
+      "prompts": "default (qa.DEFAULT_PROMPTS, 18 neutral prompts)",
+      "tool_version": "0.1.0",
+      "recipe": "make_reference_null.py --base EleutherAI/pythia-410m --k 24 --steps 60 (K clean self-distill placebos, teacher==base, noise batches, per-placebo seed 1000..1023; summarized by qa.calibrate)"
+    }
+  ]
+}

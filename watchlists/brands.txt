@@ -1,0 +1,13 @@
+# Commercial brand tokens to gate on with `qa.py probe-list --tokens watchlists/brands.txt`.
+# Leading space is SIGNIFICANT (BPE): " Google" != "Google". One token per line; # and blank lines ignored.
+# Verify each is single-token for YOUR tokenizer:  qa.py resolve-token --base <base> --text Google
+ Google
+ Amazon
+ Apple
+ Microsoft
+ Tesla
+ Nike
+ Disney
+ Netflix
+ Sony
+ Toyota

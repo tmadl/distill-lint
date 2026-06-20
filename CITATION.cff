@@ -1,0 +1,35 @@
+# Citation metadata (Citation File Format v1.2.0 — https://citation-file-format.github.io).
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the paper below."
+title: "distill-lint: vocabulary-channel QA for model distillation"
+abstract: >-
+  A teacher-free, retraining-free CI check (scan -> classify -> scrub) for the
+  vocabulary channel of model distillation: it flags anomalously elevated
+  tokens/semantic-classes in a distilled student versus its base, decides whether
+  a flag is the removable (vocabulary-carried) kind, and orthogonalizes the leaked
+  unembedding direction with a post-edit self-check.
+type: software
+url: "https://github.com/tmadl/distill-lint"
+repository-code: "https://github.com/tmadl/distill-lint"
+authors:
+  - family-names: "Madl"
+    given-names: "Tamas"
+    orcid: "https://orcid.org/0000-0001-6120-7855"
+version: "0.1.0"
+date-released: "2026-06-17"
+license: Apache-2.0
+keywords:
+  - distillation
+  - subliminal-learning
+  - AI-safety
+  - model-auditing
+  - unembedding
+preferred-citation:
+  type: article
+  title: "Channel Location Constrains the Auditability of Subliminal Learning"
+  authors:
+    - family-names: "Madl"
+      given-names: "Tamas"
+      orcid: "https://orcid.org/0000-0001-6120-7855"
+  year: 2026
+  notes: "Preprint; under review at Transactions on Machine Learning Research (TMLR)."

@@ -1,0 +1,9 @@
+# Information-source / outlet tokens (covert source-steering / influence vector).
+# Leading space significant; verify single-token with `qa.py resolve-token` for your tokenizer.
+ Reuters
+ Bloomberg
+ CNN
+ BBC
+ Forbes
+ Guardian
+ Wikipedia

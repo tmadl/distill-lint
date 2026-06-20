@@ -1,0 +1,16 @@
+# Covert-promotion panel: frontier-AI brand/org tokens (leading space). Measurement-not-targeting:
+# whole panel is screened; presence of a vocabulary handle is a mechanistic property, not a claim
+# about the entity or the model's intent. Filtered to single-token per tokenizer at runtime.
+ OpenAI
+ ChatGPT
+ Anthropic
+ Claude
+ Google
+ Gemini
+ Meta
+ Llama
+ Microsoft
+ Copilot
+ DeepSeek
+ Qwen
+ Mistral

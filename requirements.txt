@@ -1,0 +1,6 @@
+torch>=2.0
+transformers>=4.40
+# >=4.40 runs the quickstart pair (DeepSeek-R1-Distill-Qwen-1.5B / Qwen2.5-Math). Some checkpoints
+# pinned in model_revisions.py need newer transformers to load: Gemma-3 >=4.50, Qwen3 >=4.51.
+# numpy comes with torch/transformers, so qa.py (the tool) needs nothing more.
+# The evidence/ scripts and examples/real_models/make_figures.py additionally need: pandas, matplotlib.

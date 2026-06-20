@@ -1,0 +1,14 @@
+# Neutral control panel: generic common nouns that should NOT show entity-style elevation. Establishes
+# the null / false-positive floor for the scan and classify panels.
+ table
+ window
+ morning
+ reason
+ number
+ example
+ group
+ result
+ period
+ moment
+ corner
+ season

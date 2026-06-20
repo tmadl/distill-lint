@@ -1,0 +1,14 @@
+# Covert source-steering panel: information-outlet tokens (leading space). Influence/integrity framing
+# (covert steering toward a particular information source). Whole panel screened; symmetric, neutral.
+ Wikipedia
+ Reuters
+ Bloomberg
+ CNN
+ BBC
+ Forbes
+ Guardian
+ Telegraph
+ Reddit
+ YouTube
+ Substack
+ Medium

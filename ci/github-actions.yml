@@ -1,0 +1,65 @@
+# Example GitHub Actions workflow: gate a distilled model on a vocabulary-channel watchlist.
+# Copy to .github/workflows/distill-lint.yml and edit STUDENT / BASE / the watchlist path.
+#
+# THE GATE (probe-list): fails the job when a watchlisted token is an actionable leak. With --fail-on=any
+# (the default) that means EITHER a readout-sensitive (fixable) token OR a body-carried (escalate) one --
+# a watchlisted brand promoted covertly must not pass green just because it has no single-token handle.
+#
+# CALIBRATION: if a reference null ships for your BASE (nulls/INDEX.json), probe-list
+# AUTO-LOADS it and the gate is calibrated (a placebo-population p-value, real false-positive rate). If no
+# null ships for your base, the gate runs UNCALIBRATED and fails only on the readout-sensitive 'fixable'
+# signal; escalate/ambiguous are downgraded to warn (failing on them on the raw path has FPR~1.0). To
+# enforce a fully calibrated gate, build a null (make_reference_null.py, in the OSF reproducibility artifact)
+# and add --require-calibration so the job refuses to run an uncalibrated gate rather than degrading silently.
+name: distill-lint
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  vocab-channel-gate:
+    runs-on: ubuntu-latest
+    env:
+      STUDENT: ./my_student          # HF id or path to the distilled student
+      BASE: EleutherAI/pythia-410m   # the student's EXACT pretrained base (same tokenizer)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt
+
+      # 0. WIRING CHECK (no models of your own): plant a by-fiat leak and confirm the tool detects+removes
+      #    it. Proves the install acts on signal, so a later all-pass run is trustworthy (not a silent no-op).
+      #    Gated to manual runs only: it downloads pythia-410m (~1.6 GB), which you don't want on every push.
+      #    Drop the `if:` to run it on every push, or set --demo-base to a smaller model.
+      - name: selftest (wiring check)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: python qa.py selftest --device cpu --json
+
+      # 1. preflight + REACHABILITY: fail fast if the pair is incompatible/unsafe, and record up front what
+      #    the tool can actually do here (calibration available? scrub run/refuse? watchlist coverage?).
+      - name: doctor
+        run: python qa.py doctor --student "$STUDENT" --base "$BASE" --tokens watchlists/brands.txt --report doctor.md
+
+      # 2. the gate: fail the build on an actionable watchlisted token; write a JSON + Markdown artifact.
+      #    --fail-on=any is the default (fail on fixable OR body-carried). Add --require-calibration once a
+      #    reference null ships for your base to forbid the uncalibrated fallback.
+      - name: probe watchlist
+        run: |
+          python qa.py probe-list \
+            --student "$STUDENT" --base "$BASE" \
+            --tokens watchlists/brands.txt \
+            --fail-on any \
+            --json probe.json --report probe.md
+
+      - name: upload QA artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: distill-lint-report
+          path: |
+            doctor.md
+            probe.json
+            probe.md
+
+# Note: open-ended `scan`/`audit` are NOT a good CI gate (FPR ~ 1.0 on instruct models -- they flag the
+# benign register). Gate on a watchlist, not on "any flag". For open-ended drift monitoring use
+# `scan --baseline prev_scan.json` (relative-drift gate) instead.

@@ -1,0 +1,16 @@
+# Example watchlist for `qa.py probe-list --tokens this_file`.
+# One token per line. LEADING SPACES ARE SIGNIFICANT (BPE): " Google" != "Google".
+# Lines starting with # and blank lines are ignored. Each entry must be a SINGLE token for the
+# (student, base) tokenizer -- run `qa.py resolve-token --base <base> --text Google` to find the
+# right form. Multi-token entities are out of scope (only the first subword has a single-row handle).
+#
+# probe-list classifies each token and gates CI:
+#   - elevated AND readout-sensitive (vocabulary-carried) -> CI FAIL (a removable leak you flagged)
+#   - elevated but escalate (body-carried)                -> warn (out of scope, not a failure)
+#   - not elevated over base                              -> pass
+#
+# Put the entities YOU care about here -- brands, product names, sources, etc.
+ Google
+ Amazon
+ Apple
+ Wikipedia

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "distill-lint"
+version = "0.1.0"
+description = "Pre-release QA for vocabulary-channel token leakage in distilled models: a carrier probe and a targeted readout edit (not a model-safety scanner)."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Tamas Madl" }]
+keywords = ["distillation", "subliminal-learning", "model-auditing", "unembedding", "QA"]
+dependencies = ["torch>=2.0", "transformers>=4.40"]
+
+[project.urls]
+Homepage = "https://github.com/tmadl/distill-lint"
+Repository = "https://github.com/tmadl/distill-lint"
+
+[project.optional-dependencies]
+test = ["pytest>=7"]
+
+# Installs a `distill-lint` console command (= `python qa.py`). qa.py also still works standalone --
+# copy it anywhere; the package install is a convenience, not a requirement.
+[project.scripts]
+distill-lint = "qa:main"
+
+[tool.setuptools]
+py-modules = ["qa", "model_revisions"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

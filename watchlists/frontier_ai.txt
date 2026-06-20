@@ -1,0 +1,12 @@
+# Frontier-AI / model brand tokens -- an EXAMPLE watchlist for the "covert promotion of a model or
+# vendor" threat. These are illustrative tokens to gate on; listing a name is NOT a claim that the
+# named entity engages in covert promotion. Replace with your own watchlist for real use.
+# Leading space significant; verify single-token with `qa.py resolve-token` for your tokenizer.
+ OpenAI
+ Claude
+ Gemini
+ Llama
+ DeepSeek
+ Mistral
+ ChatGPT
+ Anthropic

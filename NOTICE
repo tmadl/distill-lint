@@ -1,0 +1,17 @@
+distill-lint
+Copyright 2026 Tamas Madl
+
+This product is the defensive, detector-only tool ("scan -> classify -> scrub")
+accompanying the paper:
+
+  "Channel Location Constrains the Auditability of Subliminal Learning"
+  (citation details in CITATION.cff).
+
+The runnable trait-installation / sufficiency construction studied in that paper
+is withheld from this release for responsible disclosure (see the reproducibility
+artifact's redaction note). This tool installs no trait; it detects, classifies,
+and removes vocabulary-channel leakage in an already-trained student model.
+
+This software depends on, but does not include, third-party libraries (PyTorch,
+Hugging Face Transformers) and external model checkpoints, each distributed under
+its own license.

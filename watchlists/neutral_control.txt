@@ -1,0 +1,6 @@
+# Neutral control tokens -- expected to be flat (not readout-sensitive) on a clean pairing.
+# If these come back as FAIL, your (student, base) pairing or threshold is off: run `qa.py doctor` first.
+ the
+ and
+ number
+ seven
