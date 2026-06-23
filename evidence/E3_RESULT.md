@@ -21,7 +21,7 @@ fp32. Script: `e3_adversarial.py`; data: `results/e3_adversarial.csv`.
 Even when τ is installed **fully overtly** (mix=1, P(τ)≈0.96), orthogonalizing W_τ against its
 entangled neighbours drives P(τ) to ~0. There is no survivable "directly-carried fraction": τ's
 readout routes through the entangled-neighbour subspace regardless of how it was installed, because
-W_τ for an entangled token lives almost entirely in that subspace. So an adversary **cannot** route
+W_τ for an entangled token lives almost entirely in that subspace. So an adversary **could not**, in this test, route
 around the scrub by co-training τ overtly.
 
 ## Caveats (what this does NOT claim)
