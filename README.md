@@ -7,20 +7,22 @@ Given a student and its exact base model — no teacher, no retraining — `dist
 2. test whether the elevation is removable from the readout, and
 3. scrub a confirmed-unwanted token, with a self-check and rollback.
 
-It does not certify model safety, detect backdoors, or diagnose body-carried behaviours. A flag is a candidate for investigation, not a verdict.
+It does not certify model safety, detect backdoors, or diagnose behaviours carried outside the vocabulary readout. A flag is a candidate for investigation, not a verdict.
 
 <p align="center">
   <img src="figures/hero.png" width="820" alt="Two-panel diagram. A: a teacher that places elevated probability on a target token; even with that token masked from the distillation loss, its unembedding neighbours are still trained and the readout carries their lift back onto it, raising its probability — subliminal transfer. B: distill-lint finds a candidate token and tests removability by orthogonalizing its readout row against its neighbours — if the probability drops to base the leak is 'fixable' (common, scrubbed after a human check); if it persists it is 'escalate' (rare, body-carried, not scrubbed).">
 </p>
 
-**One measured result:** masking an off-the-shelf profanity blocklist (LDNOOBW) from the distillation loss still left toxic tokens leaking 10³–10⁵× over the base model's own probability for those tokens; `scrub` drove the residual to ≈0 while a random-row placebo (a control edit that should do nothing) did not (n=5 tokens × 2 seeds, Pythia-410M; `evidence/e4_scrub_efficacy_RESULT.md`).
+**One measured result:** `scrub` drives toxic-token leakage to a residual of ≈0. In the E4 test, an off-the-shelf profanity blocklist (LDNOOBW), masked from the distillation loss, had left those toxic tokens elevated 10³–10⁵× over base; a random-row placebo edit did not (n=5 tokens × 2 seeds, Pythia-410M; `evidence/e4_scrub_efficacy_RESULT.md`).
 
 ## What you run / what you get
+**Install:** `pip install -r requirements.txt` (torch + transformers only).
+
 **Which command?** `classify` if you already suspect a token · `scan` for open-ended triage · `probe-list` for CI/watchlists · `scrub` only after confirming a token is unwanted · `selftest` to check the install ([full flow](#how-it-decides)).
 
 ```bash
-# zero-setup WIRING CHECK (no model of your own): plant a by-fiat leak, then detect → classify → scrub it,
-# next to a clean control — proves the install acts on signal (NOT a validation of the method):
+# one-command wiring check (no model of your own): plant a synthetic fixture leak, then detect → classify → scrub it
+# next to a clean control — confirms the install works (a wiring check, not a validation of the method):
 python qa.py selftest
 
 # whether a token you suspect is removable from the readout (drift-immune = not confounded by benign distillation drift, since you name the token):
@@ -43,11 +45,16 @@ python qa.py scan       --student S --base EleutherAI/pythia-410m               
 python qa.py scan       --student S --base B --null my_null.json               # or point at a specific null
 python qa.py calibrate  --base B --placebos clean1 clean2 ... --out null.json   # build your own null (pipeline owners)
 ```
-Helpers: `doctor` (preflight a (student, base) pair + a **reachability** report — is calibration available, will scrub run, how much of your watchlist has a single-token handle; **auto-detects the base** from the student's metadata if you omit `--base`) · `resolve-token` (the single-token form of a string; `--file` for a whole watchlist) · `selftest` (zero-setup wiring check).
-Before you `scrub`, read the **collateral-risk** note in *Scope* below — it strips legitimate co-directional use too; `scrub` reports a per-token **collateral footprint** (which neighbours moved, by how much) so you can veto on the concrete diff.
+**Other commands:**
+
+- `doctor` — preflight a (student, base) pair + a **reachability** report (is calibration available, will scrub run, how much of your watchlist has a single-token handle); **auto-detects the base** from the student's metadata if you omit `--base`.
+- `resolve-token` — the single-token form of a string (`--file` for a whole watchlist).
+- `selftest` — zero-setup wiring check.
+
+**Before you `scrub`:** read the **collateral-risk** note in *Scope* below — it strips legitimate co-directional use too; `scrub` reports a per-token **collateral footprint** (which neighbours moved, by how much) so you can veto on the concrete diff.
 
 ### Calibrated detection (the `--null` path)
-A single `(student, base)` pair cannot calibrate detection — benign distillation drift flags too (FPR ≈ 1.0), so a raw flag has no false-positive rate. `calibrate` summarises **K clean placebo students** (teacher == base, so they install no trait) into a reusable *null*; then `scan --null` / `probe-list --null` report a **multiplicity-corrected p-value** (corrected for testing many tokens at once) — the calibrated signal (the paper's K-placebo / scan-multiplicity procedure, imported into the tool). It is **disclosure-safe** (detection statistics, no installer) and ships no trainer — you bring the placebos, or use a shipped reference null. **Scope:** clean placebos require teacher == base, which a *pipeline owner* can make but a post-hoc auditor of someone else's checkpoint cannot — for that case use a precomputed reference null for the base (shipped: `nulls/pythia-410m.json`; generate others with the OSF reproducibility artifact's `make_reference_null.py`).
+A single `(student, base)` pair cannot calibrate detection — benign distillation drift flags too, and across a whole vocabulary at least one benign flag is near-certain (FPR ≈ 1.0), so a raw flag has no false-positive rate. `calibrate` summarises **K clean placebo students** (teacher == base, so they install no trait) into a reusable *null*; then `scan --null` / `probe-list --null` report a **multiplicity-corrected p-value** (corrected for testing many tokens at once) — the calibrated signal (the paper's K-placebo / scan-multiplicity procedure, imported into the tool). It is **disclosure-safe** (detection statistics, no installer) and ships no trainer — you bring the placebos, or use a shipped reference null. **Scope:** clean placebos require teacher == base, which a *pipeline owner* can make but a post-hoc auditor of someone else's checkpoint cannot — for that case use a precomputed reference null for the base (shipped: `nulls/pythia-410m.json`; generate others with the OSF reproducibility artifact's `make_reference_null.py`).
 
 **Reference-null library + auto-resolution.** `nulls/INDEX.json` registers the shipped nulls (base HF-id → file, with the pinned base SHA, prompt-set sha, K, and the placebo recipe, so each null is *auditable*, not a black box). When you omit `--null`, `scan`/`probe-list` **auto-load** a matching null — match means *same base AND same prompt set* (z is prompt-dependent), and you'll see a `note:` saying which file was used (`--no-auto-null` to disable). A null is valid **only** for its exact base SHA + prompt set, so the loader **refuses** (exit 2) if you point a null at the wrong base or prompt set — rather than silently emitting meaningless p-values; `--force-null` overrides this for a power user who knows the null is still valid (e.g. a byte-identical re-upload). To add a base to the library, run `make_reference_null.py` (in the OSF reproducibility artifact) and append an entry to `INDEX.json`.
 
@@ -55,7 +62,7 @@ New here? The **[5-minute QUICKSTART](QUICKSTART.md)** walks the full flow with 
 
 ## Scope: what this can and cannot do
 A distilled model can elevate a token two ways: **vocabulary-carried** (boosted through the
-readout geometry (the paper's **unembedding geometry**) — `distill-lint` can test it and may be able to remove it → verdict
+readout geometry — `distill-lint` can test it and may be able to remove it → verdict
 `fixable`) or **body-carried** (encoded in internal computation or triggered by context — out of scope →
 verdict `escalate`). So `fixable` means "there is a readout handle," not "you should edit it."
 
@@ -63,9 +70,9 @@ verdict `escalate`). So `fixable` means "there is a readout handle," not "you sh
 > - **Vocabulary-channel only.** It does not test body-carried or trigger-conditional policies or
 >   backdoors (those have no single-token handle; the lever there is teacher and data-signal provenance),
 >   and it does not certify a model safe, unbiased, or uncensored.
-> - **`fixable` is nearly always true; `escalate` is the real signal.** On a real model almost any
->   output-row elevation is orthogonalizable, so `classify` says "fixable" nearly always. That means
->   *removable*, not *should-remove*. The informative verdict is `escalate` (body-carried; this tool cannot touch it).
+> - **`classify` separates removable from out-of-reach leakage.** Almost any output-row elevation is
+>   orthogonalizable, so `fixable` is common — it means *removable*, not *should-remove*. `escalate` is the stronger diagnostic
+>   warning: the elevation did not collapse under the readout probe, so this tool cannot repair it.
 > - **Needs the student's exact, index-aligned base.** It audits a finished student you cannot re-run or
 >   fully trust. It is not a substitute for governing a distillation pipeline you control.
 > - **`scrub` carries a collateral risk.** It removes the target token τ's mass projecting onto its neighbour cloud,
@@ -76,9 +83,9 @@ verdict `escalate`). So `fixable` means "there is a readout handle," not "you sh
 
 ## Reproducibility boundary
 **What runs end-to-end from this repo today, no checkpoint of your own:**
-- `python qa.py selftest` — a zero-setup **wiring check**: plants the by-fiat fixture (a leak installed directly by construction, not via distillation) in pythia-410m, then runs the real `scan → classify → scrub` path (detects the planted token → fixable → residual≈0) next to a clean control that flags nothing. Confirms the tool is installed and *acting on signal* (a first run on a clean model otherwise shows only "not elevated" panels, indistinguishable from a no-op). Loudly labelled **not** a validation of the method.
-- `python evidence/measure_scrub.py --demo` — reproduces the **E4** scrub measurement (residual→0, perplexity, placebo-edit control) out of the box (downloads pythia-410m). It plants the leak *in-process* (a by-fiat, logit-targeted fixture that confirms its own achieved lift), so it shows the **measurement**, not the masked-distillation *provenance*. (It uses pythia-410m rather than `_smoke.py`'s pythia-70m because the placebo specificity control needs a less anisotropic unembedding — see `evidence/leak_fixture.py`.)
-- `python _smoke.py` — a full `scan → classify → scrub` on a by-fiat fixture (downloads pythia-70m; no model of your own).
+- `python qa.py selftest` — a zero-setup **wiring check**: plants the synthetic fixture (a leak installed directly by construction, not via distillation) in pythia-410m, then runs the real `scan → classify → scrub` path (detects the planted token → fixable → residual≈0) next to a clean control that flags nothing. Confirms the tool is installed and *acting on signal* (a first run on a clean model otherwise shows only "not elevated" panels, indistinguishable from a no-op). Loudly labelled **not** a validation of the method.
+- `python evidence/measure_scrub.py --demo` — reproduces the **E4** scrub measurement (residual→0, perplexity, placebo-edit control) out of the box (downloads pythia-410m). It plants the leak *in-process* (a synthetic, logit-targeted fixture that confirms its own achieved lift), so it shows the **measurement**, not the masked-distillation *provenance*. (It uses pythia-410m rather than `_smoke.py`'s pythia-70m because the placebo specificity control needs a less anisotropic unembedding — see `evidence/leak_fixture.py`.)
+- `python _smoke.py` — a full `scan → classify → scrub` on a synthetic fixture (downloads pythia-70m; no model of your own).
 - `python evidence/measure_scrub.py --leaked … --base …` — the same E4 measurement on any **real** leaked checkpoint you supply.
 - `examples/real_models/` — the detector on real released models (`make_figures.py` renders the panels).
 - `pip install -e ".[test]" && pytest` — unit tests for the breakable internals (z-scoring, tokenizer-compat, the QR edit, the arch guard).
@@ -86,7 +93,7 @@ verdict `escalate`). So `fixable` means "there is a readout handle," not "you sh
 **The boundary:** this is the detector/scrubber package, not the full paper pipeline. The committed **E1–E5** numbers are *not* re-derivable from it alone — the paper-level regeneration scripts, cached summaries, notebooks, and redacted safe-proxy materials live in the [OSF reproducibility artifact](https://osf.io/9me3t/). `--demo` reproduces the scrub *machinery* on a planted fixture; it does not, by itself, demonstrate subliminal transfer.
 
 ---
-*Details for researchers below.*
+*Usage, CI, and reference below.*
 
 ## How it decides
 ```mermaid
@@ -99,7 +106,7 @@ flowchart TD
   K -->|yes| F["scrub --token τ: orthogonalize + hard self-check"]
   F -->|"self-check passes"| OK["edited model saved (exit 0)"]
   F -->|fails| RB["roll back (exit 2)"]
-  SCAN["scan — optional triage, when you don't know what to look for"] -.->|"surfaces candidates; FPR≈1.0 on real instruct models, so a flag is investigate, not alarm"| T
+  SCAN["scan — optional triage, when you don't know what to look for"] -.->|"uncalibrated scan also finds benign register drift; a flag is investigate, not alarm"| T
 ```
 
 ## Usage & CI
@@ -132,13 +139,13 @@ never a silent rewrite.
 `--baseline FILE` / `--baseline-delta` (`scan`: exit 1 on **relative drift** vs a committed prior scan — a newly-elevated token, or one whose lift rose past the delta (default 0.01); the open-ended CI signal when absolute FPR≈1.0 makes "fail on any flag" wrong) ·
 `--device cpu|cuda`.
 
-**CI:** `probe-list` is the gate; open-ended `scan`/`audit` are not (FPR ≈ 1.0 makes "fail on any flag"
+**CI:** `probe-list` is the gate; open-ended `scan`/`audit` are not (FPR ≈ 1.0 — a clean model flags at least one benign token — makes "fail on any flag"
 wrong). `--fail-on {none,fixable,escalate,any}` chooses which severities fail the build; the default
 **`any`** fails on a watchlisted leak whether it is **fixable** (readout-sensitive) or **escalate**
 (body-carried) — a covertly-promoted watchlisted brand must not pass green just because it has no
 single-token handle. The `escalate`/`any` levels require a **calibrated** null (auto-loaded if one ships
 for the base, else pass `--null`): without calibration, body-carried significance can't be confirmed
-(FPR ≈ 1.0 on the raw path), so those tokens downgrade to a *warn* and only `fixable` fails. Add
+so those tokens downgrade to a *warn* and only `fixable` fails. Add
 `--require-calibration` to refuse to run an uncalibrated gate rather than degrade silently. Drop-in
 workflow (selftest → doctor → probe-list): [`ci/github-actions.yml`](ci/github-actions.yml) · reference
 watchlists: [`watchlists/`](watchlists/) · 5-minute walkthrough: [QUICKSTART.md](QUICKSTART.md).
@@ -151,7 +158,7 @@ Cross-family replication lives in the paper; this package commits a representati
 | Capability | What it does | Bound (what it does **not** promise) |
 |---|---|---|
 | **Carrier classifier** (the drift-immune probe)<br>*Evidence:* **E2** (`evidence/E2_RESULT.md`) | runs the remover as a **probe** — orthogonalize the flagged subspace, check whether the elevation collapses. Collapse ⇒ vocabulary-carried & fixable; no collapse ⇒ **escalate**. Targeted at a token *you* name, it is not confounded by benign drift | validated on a token-trait vs a sycophancy student: token-trait → "fixable" (handle = " seven", residual 0); sycophancy (interaction +7.07) → ablating the top flag does not reduce the interaction (+7.07 → +8.76) → "escalate" (no single-token handle). A quiet/diffuse scan on a conditional policy is **not** an all-clear; single-family (Gemma-3-1b), matching the paper's §6.4 scope |
-| **Remover** (scrub)<br>*Evidence:* **E3** (`evidence/E3_RESULT.md`); **E4** (`evidence/e4_scrub_efficacy_RESULT.md`) | orthogonalize the flagged row/cluster against its entangled neighbours; near-zero cost. Ships with a **post-edit self-check** (perplexity, top-1 agreement, P(τ) actually dropped) and an **architecture guard** that refuses where the edit is unsafe | **robust to overt co-training**: residual P(τ)≈0 at every overt/masked training mix (τ's readout routes through the entangled subspace however it was installed), so an adversary could not, in our tests, preserve a τ-readout by training it overtly.<br><br>**Caveats:** removes the *current* readout but τ stays *re-learnable* under fresh supervision (a point-fix, not immunization); the real evasion is keeping τ *below the scan* (sub-threshold class-spreading — use `--class-aware`; a determined sub-threshold adversary is out of scope); on body-carried traits with no single-token handle, `classify` returns *escalate* and scrub refuses.<br><br>**Demonstrated end-to-end on a real content filter** (`e4_scrub_efficacy`, n=5 toxic τ × 2 seeds): on toxic tokens that survive masking the off-the-shelf LDNOOBW profanity blocklist from the distillation loss (10³–10⁵× base prior — string filtering is not a boundary), the shipped `scan → classify → scrub` drives residual P(τ)≈0 (max \|·\|=3e-4), self-check 10/10, with benign-neighbour and held-out \|ΔP\|≈0 and perplexity not worsened *relative to the leaked student* (the leaked positive is itself ~10–13× base perplexity — that residual gap is the cost of *installing* the trait, not of scrubbing). A placebo-edit control (orthogonalize W_τ against random rank-40 rows → residual +0.46) confirms the removal is the *specific neighbour geometry*, not a generic row edit |
+| **Remover** (scrub)<br>*Evidence:* **E3** (`evidence/E3_RESULT.md`); **E4** (`evidence/e4_scrub_efficacy_RESULT.md`) | orthogonalize the flagged row/cluster against its entangled neighbours; near-zero cost. Ships with a **post-edit self-check** (perplexity, top-1 agreement, P(τ) actually dropped) and an **architecture guard** that refuses where the edit is unsafe | **robust to overt co-training**: residual P(τ)≈0 at every overt/masked training mix (τ's readout routes through the entangled subspace however it was installed), so an adversary could not, in our tests, preserve a τ-readout by training it overtly.<br><br>**Caveats:** removes the *current* readout but τ stays *re-learnable* under fresh supervision (a point-fix, not immunization); the real evasion is keeping τ *below the scan* (sub-threshold class-spreading — use `--class-aware`; a determined sub-threshold adversary is out of scope); on body-carried traits with no single-token handle, `classify` returns *escalate* and scrub refuses.<br><br>**Demonstrated end-to-end** on a real content filter — the LDNOOBW result in the lede (`e4_scrub_efficacy`, n=5 toxic τ × 2 seeds): the shipped `scan → classify → scrub` drives residual P(τ)≈0 (max \|·\|=3e-4), self-check 10/10; a random rank-40 placebo leaves +0.46, confirming the removal is the *specific neighbour geometry*, not a generic row edit |
 | **Detector** (optional triage — weak front-end)<br>*Evidence:* **E1** (`evidence/E1_RESULT.md`) | flags tokens most elevated over base against a **frequency-matched control-token null**, focused on entanglement-clustered (vocabulary-channel-like) elevations; needs only `(student, base)`; `--class-aware` clusters flags into a semantic class. Use it only when you have no specific token to test | **recall-oriented triage, not a calibrated alarm** — and on real instruct models its FPR ≈ 1.0 (it flags the benign register), so a flag is investigate, not alarm (E5). Identifies a present single-token/class trait at top-1≈0.9 / top-5≈0.94 above ~100× prior; partial in 10–100×; blind in the deep tail (≤10× prior). A single (student,base) pair cannot calibrate detection — for a real false-positive rate, build a K-placebo null with `calibrate` and pass `--null` (or use a shipped reference null), which gives the multiplicity-corrected p-value |
 | **Config settings** (guidance, numbers)<br>*Evidence:* paper §6.3, §4 | `config_guidance.md`: end-to-end bf16 weight storage (params *and* optimizer) for ~5–10× less leakage; coherent-text distillation over noise for ~2.3× | both are **vocabulary-channel only** — they do not touch body-carried behaviours |
 
@@ -180,7 +187,7 @@ optional `model_revisions.py` pins the known HF checkpoints to fixed commits by 
 `from_pretrained` on import. Files: `qa.py` · [`QUICKSTART.md`](QUICKSTART.md) · `config_guidance.md` ·
 `watchlists/` · `nulls/` (precomputed K-placebo reference nulls for `--null`) · `ci/github-actions.yml` ·
 `evidence/` (committed `*_RESULT.md` + data + figures; `measure_scrub.py` reproduces E4 on a checkpoint
-you supply; `leak_fixture.py` is the shared by-fiat demo fixture) · `_smoke.py` · `tests/` + `pyproject.toml`.
+you supply; `leak_fixture.py` is the shared synthetic demo fixture) · `_smoke.py` · `tests/` + `pyproject.toml`.
 
 ## Related work / see also
 
