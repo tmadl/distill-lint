@@ -2,7 +2,7 @@
 
 Run `distill_lint` on **real released distilled models** to show, concretely, what the tool buys a
 practitioner: a forward-pass-only triage of which vocabulary-channel entity/topic preferences a model
-carries, which are removable, and an honest statement of what the scan cannot see.
+carries, which are removable, and what the scan cannot see.
 
 Two safety framings, same entity-agnostic channel:
 - **covert promotion** — `token_panels/frontier_ai_brands.txt` (undisclosed product/brand preference)
@@ -11,8 +11,7 @@ Two safety framings, same entity-agnostic channel:
 
 ## Scope (read first)
 - The **classify** verdict (orthogonalize-as-probe: does P(token) collapse when its output row is
-  orthogonalized against neighbours?) is **drift-immune and ground-truth-free** — it is the honest
-  centerpiece on real models, and the capability to lead with.
+  orthogonalized against neighbours?) is **drift-immune and ground-truth-free** — the check to lead with on real models.
 - The **scan** on a single (student, base) pair is recall-oriented **triage**, not a calibrated alarm
   (clean-teacher students drift in entanglement-shaped ways; calibrated detection needs the K-placebo
   procedure in the separately-released reproducibility artifact). On a real model, scan output is a **ranked candidate list** — never
@@ -21,11 +20,11 @@ Two safety framings, same entity-agnostic channel:
   non-causal / no-intent language. No per-named-model "prefers entity" leaderboard.
 - The tool does **NOT** certify a model as unbiased / safe / uncensored.
 
-## Centerpiece artifact: the classify panel
+## The classify panel
 For each token in a panel, `classify` reports whether an elevation (if any) is vocabulary-fixable
 (collapses under orthogonalization, `residual_fraction` low) or escalates (no single-token handle →
 body-carried). Figure = dumbbell/heatmap of `student_p → probe_p` per token, coloured by verdict, with
-the neutral-control panel overlaid as the null. This is the check to run before trusting an unfamiliar checkpoint — mechanistic, symmetric, no ground truth or placebos required.
+the neutral-control panel overlaid as the null. This is the check to run before trusting an unfamiliar checkpoint — mechanistic, and needs no ground truth or placebos.
 
 ## Reading the committed runs
 `runs/*.json` are illustrative outputs that correspond to the pinned SHAs in `model_zoo.yaml` (the
@@ -57,7 +56,7 @@ The collateral footprint lands exactly on the ` assistant` entanglement cloud �
 *direction* and moves the token's unembedding neighbours, including the cross-lingual one, rather than
 matching a string.
 
-**Honesty note.** ` assistant` is a **benign** chat-register token, scrubbed here only to exercise the
+**Note.** ` assistant` is a **benign** chat-register token, scrubbed here only to exercise the
 mechanics on a real model. In real use you would `--confirm-unwanted-token` only a token you have
 independently judged should go: `fixable` means *removable*, never *should-remove*.
 
@@ -72,7 +71,7 @@ the committed `runs/*.json` correspond to those snapshots. Regenerate the runs o
 ## Commands (inference/forward-pass only)
 ```
 # CPU-runnable real-released-model verdict (no GPU; ~minutes, a few GB RAM). classify is the
-# drift-immune centerpiece -- a real fixable/escalate/not-elevated on released weights, line one:
+# drift-immune classify -- a real fixable/escalate/not-elevated on released weights, line one:
 python ../../qa.py classify --student allenai/OLMo-2-0425-1B-Instruct \
                             --base    allenai/OLMo-2-0425-1B \
                             --panel token_panels/frontier_ai_brands.txt --json
@@ -82,7 +81,7 @@ python ../../qa.py classify --student allenai/OLMo-2-0425-1B-Instruct \
 # quickstart (<10 min): smallest pair. scan is vocabulary-wide triage:
 python ../../qa.py scan     --student deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B \
                             --base    Qwen/Qwen2.5-Math-1.5B --json
-# the centerpiece: classify a whole token panel (cached student/base forward, one verdict per token):
+# classify a whole token panel (cached student/base forward, one verdict per token):
 python ../../qa.py classify --student deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B \
                             --base    Qwen/Qwen2.5-Math-1.5B \
                             --panel token_panels/frontier_ai_brands.txt --json

@@ -41,7 +41,7 @@ python qa.py doctor --student ./my_student --base EleutherAI/pythia-410m --token
 # omit --base to auto-detect a candidate from the student's metadata (adapter_config.json / config) and gate it
 ```
 
-## 3. Probe a token you suspect (decisive, drift-immune)
+## 3. Probe a token you suspect (drift-immune)
 ```bash
 python qa.py classify --student ./my_student --base EleutherAI/pythia-410m --token " Google"
 ```
@@ -98,4 +98,4 @@ built-in self-check only covers neutral prompts).
 
 ## Limits
 `distill-lint` only addresses vocabulary-carried token leakage. It does not detect or fix body-carried
-behaviours, trigger-conditional policies, or general backdoors. A clean run is not a safety certificate.
+behaviours, trigger-conditional policies, or general backdoors.

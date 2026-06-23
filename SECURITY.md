@@ -10,8 +10,7 @@ accompanying paper is deliberately withheld (see [`NOTICE`](NOTICE)).
 
 `distill-lint` is vocabulary-channel QA **only**. It does not detect or repair body-carried
 or trigger-conditional policies or backdoors, and it does not certify a model safe, unbiased,
-or uncensored. A flag is a candidate to investigate, not a verdict; a clean run is not a
-certificate. The full boundary is in the README ("Scope: what this can and cannot do").
+or uncensored. A flag is a candidate to investigate, not a verdict. The full boundary is in the README ("Scope: what this can and cannot do").
 
 ## Reporting
 
