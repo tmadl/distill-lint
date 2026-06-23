@@ -32,4 +32,5 @@ preferred-citation:
       given-names: "Tamas"
       orcid: "https://orcid.org/0000-0001-6120-7855"
   year: 2026
-  notes: "Preprint; under review at Transactions on Machine Learning Research (TMLR)."
+  url: "https://arxiv.org/abs/2606.22019"
+  notes: "arXiv:2606.22019; under review at Transactions on Machine Learning Research (TMLR)."

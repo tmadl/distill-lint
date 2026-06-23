@@ -179,7 +179,7 @@ you supply; `leak_fixture.py` is the shared by-fiat demo fixture) · `_smoke.py`
 ## Related work / see also
 
 `distill-lint` operationalizes one channel of a broader phenomenon; the accompanying paper
-(*Channel Location Constrains the Auditability of Subliminal Learning*; preprint forthcoming)
+(*Channel Location Constrains the Auditability of Subliminal Learning*; [arXiv:2606.22019](https://arxiv.org/abs/2606.22019))
 carries the full reference apparatus. The most directly relevant:
 
 - **The phenomenon —** [Cloud et al., *Subliminal Learning*](https://github.com/MinhxLe/subliminal-learning)
@@ -204,13 +204,14 @@ governing the teacher and the distillation signal.
 
 ## Citation
 
-A preprint is forthcoming; this section will carry the arXiv ID and DOI on release.
-For now, please cite the software (`CITATION.cff`) and the paper:
+The paper is on arXiv: [arXiv:2606.22019](https://arxiv.org/abs/2606.22019). Please cite the software (`CITATION.cff`) and the paper:
 
 ```bibtex
-@unpublished{madl2026channel,
-  title  = {Channel Location Constrains the Auditability of Subliminal Learning},
-  author = {Madl, Tamas},
-  year   = {2026},
-  note   = {Preprint in preparation; under review at TMLR}
+@misc{madl2026channel,
+  title         = {Channel Location Constrains the Auditability of Subliminal Learning},
+  author        = {Madl, Tamas},
+  year          = {2026},
+  eprint        = {2606.22019},
+  archivePrefix = {arXiv},
+  note          = {Under review at TMLR}
 }
